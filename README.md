@@ -1,4 +1,3 @@
-# individual-assignment-2-alhuri
 # Red Wine Quality EDA
 
 ## Dataset Information
@@ -6,7 +5,7 @@ The dataset of red "Vinho Verde" wine is used for EDA task. For further informat
 refer to [Cortez et al., 2009]. The data contains physicochemical variables and quality as a target variable.
 The data [link](https://archive.ics.uci.edu/ml/datasets/wine+quality) .
 
-- [Wine Report Page](https://Misk-DSI.github.io/individual-assignment-2-alhuri/)
+- [Wine Report Page](https://alhuri.github.io/individual-assignment-2-alhuri/)
 
 
 | Variable            | Description                                            |
@@ -38,9 +37,6 @@ Using a simple R script, the dataset is explored to present the most interesting
 │   README.md
 │   wine_report.html    
 │   individual-assignment-2-alhuri.Rproj
-│
-└───archive/
-│   │   assignment.md
 │   
 └───data/
 │   │   winequality-red.csv
@@ -51,14 +47,14 @@ Using a simple R script, the dataset is explored to present the most interesting
 ```
 
 ## Used Libraries
-- tidyr
-- ggpubr
-- tidyverse
-- ggplot2
-- dplyr
-- cluster
-- factoextra
-- corrplot
-- janitor
-- here
-- reactable
+`tidyr` 
+`ggpubr`
+`tidyverse`
+`ggplot2`
+`dplyr`
+`cluster`
+`factoextra`
+`corrplot`
+`janitor`
+`here`
+`reactable`
