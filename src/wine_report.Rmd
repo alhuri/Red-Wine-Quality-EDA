@@ -1,0 +1,188 @@
+---
+title: "Wine Report"
+author: "Lina Alhuri"
+date: "6/15/2022"
+output: html_document
+
+knit: (function(input, ...) {
+    rmarkdown::render(
+      input,
+      output_dir = "../"
+    )
+  })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyr)
+library(ggpubr)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(cluster)
+library(factoextra)
+library(corrplot)
+library(janitor)
+library(here)
+library(reactable)
+
+```
+
+# Introduction
+Using a simple R script, the dataset is explored to present the most interesting and useful insights along with the questions they answer in a report format.
+
+
+# Data
+The dataset of red "Vinho Verde" wine is used for EDA task. For further information,
+refer to [Cortez et al., 2009]. The data contains physicochemical variables and quality as a target variable see <https://archive.ics.uci.edu/ml/datasets/wine+quality>.
+
+
+| Variable            | Description                                            |
+|---------------------|--------------------------------------------------------|
+| fixed acidity       | most acids involved with wine or fixed or nonvolatile. |
+| volatile acidity    | the amount of acetic acid in wine.                     |
+| citric acid         | citric acid can add ‘freshness’ to wines.              |
+| residual sugar      | the amount of sugar remaining after fermentation stops.|
+| chlorides           | the amount of salt in the wine.                        |
+| free sulfur dioxide | the free form of SO2 exists in equilibrium between molecular SO2.|
+| density             | the density of water is close to that of water depending on the percent alcohol and sugar content.|
+| pH                  | describes how acidic or basic a wine is on a scale from 0 to 14.|
+| sulphates           | a wine additive which can contribute to sulfur dioxide gas (S02) levels.|
+| alcohol             | the percent alcohol content.                           |
+| quality             | score between 0 and 10.                                |
+
+
+### Basic Information
+```{r, echo = FALSE, message=FALSE}
+
+#reading data
+data <- read_csv(here('data/winequality-red.csv'))
+
+data<-data %>%
+  remove_empty(c("rows", "cols"))%>%
+  clean_names()
+```
+
+
+
+```{r , echo = FALSE}
+reactable(data)
+```
+
+```{r}
+summary(data)
+```
+
+By looking at Q1 and Q3 values we can observe the range of some substance content in the wine sample
+
+# EDA
+
+```{r}
+pairs(data)
+```
+
+The pair plot can be useful to see relations between every two variables and we can see many for example (alcohol and density) where the increase of alcohol decreases the density. Also, a positive relation can be seen between sugar and density. However, none of the variables shows an obvious linear relation with wine quality. Thus, a correlation plot will be used next to measure the correlation.
+
+
+### Correlation Analysis
+```{r}
+d = cor(data)
+corrplot.mixed(d, order = 'AOE')
+```
+
+alcohol shows the highest correlation to quality with the value of **0.48** which is still low.
+
+
+```{r}
+lm.fit <- lm(quality ~ alcohol, data = data)
+summary(lm.fit)
+```
+from the residuals we see similar values on the right and left of the median. The median is close to zero and the p value is less than **0.5**.
+Looking at the estimate, we can observe that one unit of alcohol increases **0.36084** in quality. However, the Adjusted r sequare small value of **0.2** suggests that alcohol is not the best variable to study the quality
+
+```{r}
+plot(data$alcohol, data$quality)
+abline(lm.fit, lwd = 3, col = "red")
+```
+
+Using a linear model the plot proves too that the association between alcohol and quality is not strong.
+
+
+## Histograms
+
+
+```{r , echo = FALSE, message=FALSE, results="hide"}
+data %>% gather() %>% head()
+```
+
+```{r}
+ggplot(gather(data), aes(value)) + 
+  geom_histogram(color= "black", fill="lightblue",bins = 30) + 
+  facet_wrap(~key, scales = 'free_x')
+```
+
+
+Most of the plots are positively skewed with more lower values, while few have normal distributions such as density and Ph level.
+
+
+```{r, echo = FALSE}
+ggplot(data, aes(x=citric_acid)) + geom_histogram(color="black", fill="lightblue",bins = 30)
+
+```
+
+Taking a closer look at the citric_acid histogram, it shows that over 150 of the sample data have zero citric acids, which shows that it is additional content to wine.
+
+```{r, echo = FALSE}
+ggplot(data, aes(x=quality)) + geom_histogram(color="black", fill="lightblue",bins = 30)
+
+```
+
+For the quality, the dataset is not balanced, making it difficult to investigate what affects wine quality.
+
+## Boxplots
+```{r}
+data%>%
+  gather(-quality, key = "var", value = "value") %>% 
+  ggplot(aes(x = factor(quality), y = value, color = quality, group = quality)) +
+  geom_boxplot() +
+  facet_wrap(~ var, scales = "free")+
+  guides(fill = guide_legend(title = "Quality"))+ xlab("quality")
+```
+
+According to the plots above most of the attributes show little to no association with quality (e.g. chlorides). Except for some varibles such as sulphate, the plot shows that higher-quality wines with a rating of 6, 7, and 8 have in general more Sulphate.
+
+```{r, echo = FALSE}
+ggplot(data, aes(x = factor(quality), y =alcohol, fill = quality)) + 
+  stat_boxplot(geom = "errorbar", width = 0.25) + 
+  geom_boxplot() +
+  guides(fill = guide_legend(title = "Quality"))+ xlab("quality")
+```
+
+Generally, the plot of alcohol shows a positive association where the increase in alcohol content increases the quality of the wine.
+
+## Density plots
+```{r}
+data%>%
+  gather(-quality, key = "var", value = "value") %>% 
+  ggplot(aes(x = value, fill=factor(quality))) +
+  geom_density(alpha=0.3) +
+  facet_wrap(~ var, scales = "free")+
+  guides(fill = guide_legend(title = "Quality"))+ xlab("quality")
+```
+
+The plots mostly show no clear signs of the effect of variables on the quality. Residual sugar, for example, has no impact on the quality of the wine.
+
+```{r echo = FALSE}
+data %>% ggplot(aes(x=volatile_acidity, fill=factor(quality))) +
+  geom_density(alpha=0.3)
+```
+
+The most useful variables according to plots are alcohol, volatile acidity, and citric acid. According to the plot above more volatile acidity content the less quality we get.
+
+
+# Conclusion
+
+Most of the variable has little effect on the quality of the wine. Residual_sugar, for example, shows no clear impact on the quality. The strongest correlation is with alcohol and then volatile acidity with positive and negative associations respectively. The majority of the plots are positively skewed, with more lower values than large values. The citric acid histogram demonstrates that over 150 of the sample data has zero to little citric acid, indicating that it and added content to wine and not that essential. it is important to note that the dataset is not balanced. It has few highly and poorly rated samples, making it difficult to investigate what affects variables on the wine quality.
+
+
